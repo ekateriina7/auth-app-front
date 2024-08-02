@@ -16,17 +16,21 @@ function validateEmail(value) {
   if (!emailPattern.test(value)) {
     return 'Email is not valid';
   }
+
+  return undefined;
 }
 
 function validatePassword(value) {
   if (!value) {
     return 'Password is required';
   }
-    
+
   if (value.length < 6) {
     return 'At least 6 characters';
   }
-};
+
+  return undefined;
+}
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -43,13 +47,22 @@ export const LoginPage = () => {
           password: '',
         }}
         validateOnMount={true}
-        onSubmit={({ email, password }) => {
+        onSubmit={({ email, password }, formikHelpers) => {
+          formikHelpers.setSubmitting(true);
+
           return login({ email, password })
             .then(() => {
-              navigate(location.state?.from?.pathname || '/');
+              navigate(location.state?.from?.pathname || '/profile');
             })
-            .catch(error => {
-              setError(error.response?.data?.message);
+            .catch((error) => {
+              if (error.response?.status === 403) {
+                setError('Your account is inactive. Please activate your email.');
+              } else {
+                setError(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+              }
+            })
+            .finally(() => {
+              formikHelpers.setSubmitting(false);
             });
         }}
       >
@@ -58,7 +71,9 @@ export const LoginPage = () => {
             <h1 className="title">Log in</h1>
 
             <div className="field">
-              <label htmlFor="email" className="label">Email</label>
+              <label htmlFor="email" className="label">
+                Email
+              </label>
 
               <div className="control has-icons-left has-icons-right">
                 <Field
@@ -135,9 +150,13 @@ export const LoginPage = () => {
               </button>
             </div>
 
-            Do not have an account?
-            {' '}
-            <Link to="/sign-up">Sign up</Link>
+            <p>
+              Forgot your password? <Link to="/reset-password">Reset Password</Link>
+            </p>
+
+            <p>
+              Do not have an account? <Link to="/sign-up">Sign up</Link>
+            </p>
           </Form>
         )}
       </Formik>
