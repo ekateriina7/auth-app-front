@@ -13,6 +13,11 @@ import { UsersPage } from './pages/UsersPage';
 import { Loader } from './components/Loader.jsx';
 import { HomePage } from './pages/HomePage.jsx';
 import { usePageError } from './hooks/usePageError.js';
+import { ProfilePage } from './pages/ProfilePage.jsx';
+import { ResetPasswordPage } from './pages/ResetPasswordPage.jsx';
+import { PasswordResetRequestPage } from './pages/PasswordResetRequestPage.jsx';
+import { PasswordResetSuccessPage } from './pages/PasswordResetSuccessPage.jsx';
+import { NotFoundPage } from './pages/NotFoundPage.jsx';
 
 function App() {
   const navigate = useNavigate();
@@ -27,84 +32,84 @@ function App() {
     return <Loader />
   }
 
-  return <>
-    <nav className="navbar has-shadow" role="navigation" aria-label="main navigation">
-      <div className="navbar-start">
-        <NavLink to="/" className="navbar-item">
-          Home
-        </NavLink>
+  return (
+    <>
+      <nav className="navbar has-shadow" role="navigation" aria-label="main navigation">
+        <div className="navbar-start">
+          <NavLink to="/" className="navbar-item">
+            Home
+          </NavLink>
 
-        <NavLink to="/users" className="navbar-item">
-          Users
-        </NavLink>
-      </div>
+          <NavLink to="/users" className="navbar-item">
+            Users
+          </NavLink>
 
-      <div className="navbar-end">
-        <div className="navbar-item">
-          <div className="buttons">
-            {user ? (
-              <button
-                className="button is-light has-text-weight-bold"
-                onClick={() => {
-                  logout()
-                    .then(() => {
-                      navigate('/');
-                    })
-                    .catch((error) => {
-                      setError(error.response?.data?.message);
-                    });
-                }}
-              >
-                Log out
-              </button>
-            ) : (
-              <>
-                <Link to="/sign-up" className="button is-light has-text-weight-bold">
-                  Sign up
-                </Link>
+          {user && (
+            <NavLink to="/profile" className="navbar-item">
+              Profile
+            </NavLink>
+          )}
+        </div>
 
-                <Link to="/login" className="button is-success has-text-weight-bold">
-                  Log in
-                </Link>
-              </>
-            )}
+        <div className="navbar-end">
+          <div className="navbar-item">
+            <div className="buttons">
+              {user ? (
+                <button
+                  className="button is-light has-text-weight-bold"
+                  onClick={() => {
+                    logout()
+                      .then(() => {
+                        navigate('/login');
+                      })
+                      .catch((error) => {
+                        setError(error.response?.data?.message);
+                      });
+                  }}
+                >
+                  Log out
+                </button>
+              ) : (
+                <>
+                  <Link to="/sign-up" className="button is-light has-text-weight-bold">
+                    Sign up
+                  </Link>
+
+                  <Link to="/login" className="button is-success has-text-weight-bold">
+                    Log in
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
-    <main>
-      <section className="section">
-        <Routes>
-          <Route
-            path="/"
-            element={<HomePage />}
-          />
-          <Route
-            path="sign-up"
-            element={<RegistrationPage />}
-          />
-          <Route
-            path="activate/:activationToken"
-            element={<AccountActivationPage />}
-          />
-          <Route
-            path="login"
-            element={<LoginPage />}
-          />
+      <main>
+        <section className="section">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="sign-up" element={<RegistrationPage />} />
+            <Route path="activate/:activationToken" element={<AccountActivationPage />} />
+            <Route path="login" element={<LoginPage />} />
 
-          <Route path="/" element={<RequireAuth />}>
-            <Route
-              path="users"
-              element={<UsersPage />}
-            />
-          </Route>
-        </Routes>
-      </section>
+            <Route path="/" element={<RequireAuth />}>
+              <Route path="users" element={<UsersPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
 
-      {error && <p className="notification is-danger is-light">{error}</p>}
-    </main>
-  </>
+            <Route path="reset-password" element={<PasswordResetRequestPage />} />
+            <Route path="reset-password/:resetToken" element={<ResetPasswordPage />} />
+            <Route path="reset-success" element={<PasswordResetSuccessPage />} />
+
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </section>
+
+        {error && <p className="notification is-danger is-light">{error}</p>}
+      </main>
+    </>
+  );
 }
 
 export default App;
