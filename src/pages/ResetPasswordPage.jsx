@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form, Field } from 'formik';
 import cn from 'classnames';
+import { authService } from '../services/authService.js';
+import { usePageError } from '../hooks/usePageError.js';
 
 const validatePassword = (value) => {
   if (!value) {
@@ -15,7 +17,9 @@ const validatePassword = (value) => {
 
 export const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  const [submissionError, setSubmissionError] = useState('');
+  const { resetToken } = useParams();
+  const [submissionError, setSubmissionError] = usePageError('');
+
 
   return (
     <div className="box">
@@ -26,16 +30,26 @@ export const ResetPasswordPage = () => {
           password: '',
           confirmation: '',
         }}
-        onSubmit={(values, { setSubmitting, setFieldError }) => {
+        onSubmit={async (values, { setSubmitting, setFieldError }) => {
           setSubmitting(true);
+          setSubmissionError('');
 
           if (values.password !== values.confirmation) {
             setFieldError('confirmation', 'Passwords do not match');
             setSubmitting(false);
             return;
           }
-          navigate('/reset-success');
-          setSubmitting(false);
+
+          try {
+            await authService.resetPassword(resetToken, values.password);
+            navigate('/reset-success');
+          } catch (error) {
+            setSubmissionError(
+              error.response?.data?.message || 'Password reset failed'
+            );
+          } finally {
+            setSubmitting(false);
+          }
         }}
       >
         {({ touched, errors, isSubmitting, values }) => (
@@ -119,13 +133,13 @@ export const ResetPasswordPage = () => {
                 Reset Password
               </button>
             </div>
+
+            {submissionError && (
+              <p className="notification is-danger">{submissionError}</p>
+            )}
           </Form>
         )}
       </Formik>
-
-      {submissionError && (
-        <p className="notification is-danger">{submissionError}</p>
-      )}
     </div>
   );
 };

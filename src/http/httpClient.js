@@ -8,35 +8,32 @@ httpClient.interceptors.request.use(onRequest);
 httpClient.interceptors.response.use(onResponseSuccess, onResponseError);
 
 function onRequest(request) {
-  const accessToken = localStorage.getItem('accessToken');
-
+  const accessToken = accessTokenService.get();
   if (accessToken) {
     request.headers['Authorization'] = `Bearer ${accessToken}`;
   }
-
   return request;
 }
 
-function onResponseSuccess(res) {
-  return res.data;
+function onResponseSuccess(response) {
+  return response.data;
 }
 
 async function onResponseError(error) {
   const originalRequest = error.config;
 
-  if (error.response.status !== 401) {
-    throw error;
+  if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    originalRequest._retry = true;
+    try {
+      const { accessToken } = await authService.refresh();
+      accessTokenService.save(accessToken);
+
+      originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+      return httpClient(originalRequest);
+    } catch (err) {
+      return Promise.reject(err);
+    }
   }
 
-  try {
-    const { accessToken } = await authService.refresh();
-
-    accessTokenService.save(accessToken);
-
-    return httpClient.request(originalRequest);
-  } catch (error) {
-    throw error;
-  }
+  return Promise.reject(error);
 }
-
-

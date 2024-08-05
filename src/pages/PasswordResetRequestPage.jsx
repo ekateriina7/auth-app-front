@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import cn from 'classnames';
+import { authService } from '../services/authService.js';
+import { usePageError } from '../hooks/usePageError.js';
 
 const validateEmail = (value) => {
   if (!value) {
@@ -8,7 +10,6 @@ const validateEmail = (value) => {
   }
 
   const emailPattern = /^[\w.+-]+@([\w-]+\.){1,3}[\w-]{2,}$/;
-
   if (!emailPattern.test(value)) {
     return 'Email is not valid';
   }
@@ -17,6 +18,9 @@ const validateEmail = (value) => {
 };
 
 export const PasswordResetRequestPage = () => {
+  const [submissionError, setSubmissionError] = usePageError('');
+  const [successMessage, setSuccessMessage] = useState('');
+
   return (
     <div className="box">
       <h1 className="title">Password Reset Request</h1>
@@ -25,8 +29,21 @@ export const PasswordResetRequestPage = () => {
         initialValues={{
           email: '',
         }}
-        onSubmit={(values) => {
-          console.log('Password reset request:', values);
+        onSubmit={async (values, { setSubmitting }) => {
+          setSubmitting(true);
+          setSubmissionError('');
+          setSuccessMessage('');
+
+          try {
+            await authService.requestPasswordReset(values.email);
+            setSuccessMessage('Password reset email sent successfully.');
+          } catch (error) {
+            setSubmissionError(
+              error.response?.data?.message || 'Failed to send password reset email'
+            );
+          } finally {
+            setSubmitting(false);
+          }
         }}
       >
         {({ touched, errors, isSubmitting }) => (
@@ -75,6 +92,14 @@ export const PasswordResetRequestPage = () => {
                 Send Reset Link
               </button>
             </div>
+
+            {submissionError && (
+              <p className="notification is-danger">{submissionError}</p>
+            )}
+
+            {successMessage && (
+              <p className="notification is-success">{successMessage}</p>
+            )}
           </Form>
         )}
       </Formik>

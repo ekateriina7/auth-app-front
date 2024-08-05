@@ -4,4 +4,12 @@ function getAll() {
   return httpClient.get('/users')
 }
 
-export const userService = { getAll };
+function updateProfile({ name, email, currentPassword, newPassword }) {
+  return httpClient.put('/profile', { name, email, currentPassword, newPassword });
+}
+
+export const userService = {
+  getAll,
+  updateProfile,
+};
+

@@ -99,7 +99,7 @@ function App() {
             </Route>
 
             <Route path="reset-password" element={<PasswordResetRequestPage />} />
-            <Route path="reset-password/:resetToken" element={<ResetPasswordPage />} />
+            <Route path="/password-reset-confirm/:resetToken" element={<ResetPasswordPage />} />
             <Route path="reset-success" element={<PasswordResetSuccessPage />} />
 
             <Route path="*" element={<NotFoundPage />} />
